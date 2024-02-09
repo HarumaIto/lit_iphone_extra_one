@@ -8,12 +8,13 @@
 import UIKit
 import RealmSwift
 
-class ViewController: UIViewController, UITableViewDataSource {
+class ItemViewController: UIViewController, UITableViewDataSource {
     
     @IBOutlet var tableView: UITableView!
     
     let realm = try! Realm()
     var items: [ShoppingItem] = []
+    var selectedCategory: Category!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,7 +22,7 @@ class ViewController: UIViewController, UITableViewDataSource {
         
         tableView.dataSource = self
         tableView.register(UINib(nibName: "ItemTableViewCell", bundle: nil), forCellReuseIdentifier: "ItemCell")
-        
+        navigationItem.title = selectedCategory.title
         items = readItems()
     }
     
@@ -38,12 +39,19 @@ class ViewController: UIViewController, UITableViewDataSource {
     }
 
     func readItems() -> [ShoppingItem] {
-        return Array(realm.objects(ShoppingItem.self))
+        return Array(realm.objects(ShoppingItem.self).filter("category == %@", selectedCategory!))
     }
     
     override func viewWillAppear(_ animated: Bool) {
         items = readItems()
         tableView.reloadData()
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "toNewItemView" {
+            let newItemViewController = segue.destination as! NewItemViewController
+            newItemViewController.category = self.selectedCategory
+        }
     }
 }
 
