@@ -8,7 +8,7 @@
 import UIKit
 import RealmSwift
 
-class ViewController: UIViewController, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     @IBOutlet var table: UITableView!
     
@@ -21,6 +21,7 @@ class ViewController: UIViewController, UITableViewDataSource {
         // Do any additional setup after loading the view.
         
         table.dataSource = self
+        table.delegate = self
         todo = loadTodos()
     }
     
@@ -41,6 +42,38 @@ class ViewController: UIViewController, UITableViewDataSource {
         cell.contentConfiguration = content
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let alert: UIAlertController = UIAlertController(title: "TODOを削除しますか？", message: todo[indexPath.row].title, preferredStyle: .alert)
+        
+        alert.addAction(
+            UIAlertAction(
+                title: "いいえ", style: .default,
+                handler: { action in
+                    self.navigationController?.popViewController(animated: true)
+                }
+            )
+        )
+        alert.addAction(
+            UIAlertAction(
+                title: "はい", style: .default,
+                handler: { action in
+                    do {
+                        try self.realm.write{
+                            self.realm.delete(self.todo[indexPath.row])
+                        }
+                        self.todo = self.loadTodos()
+                        self.table.reloadData()
+                    } catch {
+                        print("Error")
+                    }
+                    self.navigationController?.popViewController(animated: true)
+                }
+            )
+        )
+        
+        present(alert, animated: true, completion: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
